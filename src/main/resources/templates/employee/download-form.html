@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Download File — KeyLock </title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+<nav class="navbar">
+    <div class="logo"><div class="logo-icon">🔐</div>KEYLOCK </div>
+    <div class="nav-links">
+        <a href="/employee/dashboard" class="nav-btn">← Back</a>
+    </div>
+</nav>
+<div class="auth-wrap">
+    <div class="auth-box" style="max-width:520px">
+        <div class="auth-title">🔐 Enter RSA Key</div>
+        <div class="auth-sub">
+            File: <strong th:text="${file != null} ? ${file.originalName} : 'Unknown'"></strong>
+        </div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+        <form th:action="@{/employee/download/{id}(id=${fileId})}" method="post">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <div class="form-group" style="margin-top:16px">
+                <label>Your RSA Private Key</label>
+                <textarea name="rsaKey" rows="8"
+                          style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+                                 font-family:monospace;font-size:0.75rem;padding:12px;border-radius:8px;resize:vertical"
+                          placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;...&#10;-----END RSA PRIVATE KEY-----"
+                          required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Verify &amp; Download</button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

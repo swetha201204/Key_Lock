@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Your RSA Key — KeyLock </title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo"><div class="logo-icon">🔐</div>KEYLOCK </div>
+</nav>
+
+<div class="auth-wrap">
+    <div class="auth-box" style="max-width:580px">
+
+        <!-- WARNING BANNER -->
+        <div class="modal-warn">
+            ⚠️ &nbsp; This key will <strong>NOT</strong> be shown again. Save it RIGHT NOW!
+        </div>
+
+        <div class="auth-title">Your Unique RSA Access Key</div>
+        <div class="auth-sub">
+            Hello <strong th:text="${name}"></strong>! Your account has been created.<br/>
+            This private key is required to download files. <strong>Store it somewhere safe.</strong>
+        </div>
+
+        <!-- RSA Key Display Box -->
+        <div class="key-box" id="keyBox" th:text="${rsaKey}"></div>
+
+        <!-- Action Buttons -->
+        <div class="key-actions">
+            <button class="btn btn-outline" onclick="copyKey()" id="copyBtn">📋 Copy Key</button>
+            <button class="btn btn-primary" onclick="downloadKey()">⬇ Download .pem File</button>
+        </div>
+
+        <!-- Info note -->
+        <div style="background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);border-radius:8px;padding:12px 14px;margin:16px 0;font-size:0.82rem;color:var(--muted)">
+            💡 <strong style="color:var(--text)">How to use:</strong> When you want to download a file, you'll be asked to paste this private key. Only the correct key will unlock the file.
+        </div>
+
+        <a href="/login" class="btn btn-outline" style="display:block;margin-top:8px;text-align:center;text-decoration:none">
+            I've saved my key → Continue to Login
+        </a>
+
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const keyContent = /*[[${rsaKey}]]*/ "";
+    const fileName = 'keylock_private_key.pem';
+
+    function copyKey() {
+        navigator.clipboard.writeText(keyContent).then(() => {
+            document.getElementById('copyBtn').textContent = '✅ Copied!';
+            setTimeout(() => document.getElementById('copyBtn').textContent = '📋 Copy Key', 2500);
+        }).catch(() => {
+            // Fallback for older browsers
+            const el = document.getElementById('keyBox');
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            document.execCommand('copy');
+            document.getElementById('copyBtn').textContent = '✅ Copied!';
+            setTimeout(() => document.getElementById('copyBtn').textContent = '📋 Copy Key', 2500);
+        });
+    }
+
+    function downloadKey() {
+        const blob = new Blob([keyContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+</script>
+</body>
+</html>

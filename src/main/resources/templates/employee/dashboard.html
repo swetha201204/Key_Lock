@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Employee Dashboard — KeyLock </title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="logo"><div class="logo-icon">🔐</div>KEYLOCK </div>
+    <div class="nav-links">
+        <span style="font-size:0.82rem;color:var(--muted)">
+            Employee: <span style="color:var(--text)" th:text="${employee.name}"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="nav-btn">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="dash-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-label">Main</div>
+        <div class="sidebar-item active"><span class="si">📁</span> My Files</div>
+        <div class="sidebar-label">System</div>
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="sidebar-item" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--muted)">
+                <span class="si">🚪</span> Logout
+            </button>
+        </form>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dash-main">
+
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <div class="dash-header">
+            <div>
+                <div class="dash-title">Secure File Vault</div>
+                <div class="dash-sub">Files shared by administrator — RSA key required to download</div>
+            </div>
+        </div>
+
+        <!-- Revoked Banner -->
+        <div th:if="${isRevoked}" class="mail-alert" style="background:rgba(255,71,87,0.07);border-color:rgba(255,71,87,0.3);margin-bottom:24px">
+            <span>🚫</span>
+            <div>Your access has been <strong style="color:var(--danger)">revoked by the administrator</strong>. You cannot download files. Contact your admin.</div>
+        </div>
+
+        <!-- Files Panel -->
+        <div class="panel">
+            <div class="panel-head">
+                <span>Available Files</span>
+                <span class="tag tag-emp" th:text="${fileCount} + ' files'">0 files</span>
+            </div>
+            <div class="panel-body" style="padding:0">
+
+                <!-- Empty State -->
+                <div th:if="${#lists.isEmpty(files)}" class="empty">
+                    <div class="empty-icon">📭</div>
+                    No files available yet. Check back later.
+                </div>
+
+                <!-- Files Table -->
+                <table class="file-table" th:if="${!#lists.isEmpty(files)}">
+                    <thead>
+                        <tr>
+                            <th>File</th>
+                            <th>Size</th>
+                            <th>Uploaded</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="file : ${files}">
+                            <td>
+                                <span class="file-name" th:text="${file.originalName}">file.pdf</span>
+                            </td>
+                            <td>
+                                <span class="file-size" th:text="${file.formattedSize}">1.2 MB</span>
+                            </td>
+                            <td>
+                                <span class="file-date"
+                                      th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy, HH:mm')}">
+                                </span>
+                            </td>
+                            <td>
+                                <!-- Disabled if revoked -->
+                                <button th:if="${isRevoked}" class="action-btn" disabled
+                                        style="opacity:0.4;cursor:not-allowed">
+                                    🚫 Revoked
+                                </button>
+                                <!-- Download button -->
+                                <button th:if="${!isRevoked}" class="action-btn dl"
+                                        th:onclick="'openDownloadModal(' + ${file.id} + ', \'' + ${file.originalName} + '\')'">
+                                    ⬇ Download
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<!-- ===== DOWNLOAD MODAL ===== -->
+<div class="modal-overlay" id="downloadModal">
+    <div class="modal">
+        <h2 style="font-size:1.2rem;margin-bottom:6px">🔐 Enter RSA Key to Download</h2>
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:4px">
+            File: <strong id="modalFileName" style="color:var(--text)"></strong>
+        </p>
+        <p style="font-size:0.82rem;color:var(--muted);margin-bottom:16px">
+            Paste your RSA private key to decrypt and download this file.
+        </p>
+
+        <form id="downloadForm" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <textarea name="rsaKey" id="rsaKeyInput"
+                      placeholder="-----BEGIN RSA PRIVATE KEY-----&#10;Paste your full private key here...&#10;-----END RSA PRIVATE KEY-----"
+                      style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);
+                             font-family:var(--font-mono, monospace);font-size:0.75rem;padding:12px;
+                             border-radius:8px;resize:vertical;height:120px;outline:none"
+                      onfocus="this.style.borderColor='var(--accent)'"
+                      onblur="this.style.borderColor='var(--border)'"
+                      required></textarea>
+            <div style="display:flex;gap:10px;margin-top:14px">
+                <button type="submit" class="btn btn-primary" style="flex:1">Verify &amp; Download 🔓</button>
+                <button type="button" class="btn btn-outline" onclick="closeModal()" style="width:auto;padding:12px 20px">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openDownloadModal(fileId, fileName) {
+    document.getElementById('modalFileName').textContent = fileName;
+    document.getElementById('downloadForm').action = '/employee/download/' + fileId;
+    document.getElementById('rsaKeyInput').value = '';
+    document.getElementById('downloadModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('downloadModal').classList.remove('open');
+}
+
+// Close modal on overlay click
+document.getElementById('downloadModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+</script>
+
+</body>
+</html>

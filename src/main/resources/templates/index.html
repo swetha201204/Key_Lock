@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>KeyLock  — Secure File Exchange</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="logo">
+        <div class="logo-icon">🔐</div>
+        KEYLOCK 
+    </div>
+    <div class="nav-links">
+        <a href="/login" class="nav-btn">Sign In</a>
+        <a href="/register" class="nav-btn primary">Get Started</a>
+    </div>
+</nav>
+
+<div class="hero">
+    <div class="hero-glow"></div>
+    <div class="badge">AES-256 + RSA-2048 Hybrid Encryption</div>
+    <h1>Secure File Exchange<br/>Without Compromise</h1>
+    <p>Enterprise-grade cryptography for your team. Upload, share, and revoke access with zero re-encryption overhead.</p>
+    <div class="hero-btns">
+        <a href="/register" class="btn btn-primary" style="width:auto;padding:13px 32px;text-decoration:none">Start Secure →</a>
+        <a href="/login" class="btn btn-outline" style="width:auto;padding:13px 32px;text-decoration:none">Sign In</a>
+    </div>
+</div>
+
+<div class="feature-grid">
+    <div class="feat-card">
+        <div class="feat-icon">🔒</div>
+        <h3>Hybrid Encryption</h3>
+        <p>AES-256 encrypts files. RSA-2048 secures the session keys per user.</p>
+    </div>
+    <div class="feat-card">
+        <div class="feat-icon">🗝️</div>
+        <h3>Unique RSA Keys</h3>
+        <p>Every user gets a unique key pair. No shared credentials, no shared risk.</p>
+    </div>
+    <div class="feat-card">
+        <div class="feat-icon">⚡</div>
+        <h3>Instant Revocation</h3>
+        <p>Revoke access instantly without re-encrypting any stored files.</p>
+    </div>
+    <div class="feat-card">
+        <div class="feat-icon">🛡️</div>
+        <h3>Integrity Checks</h3>
+        <p>SHA-256 hashing verifies every file before decryption.</p>
+    </div>
+</div>
+
+</body>
+</html>

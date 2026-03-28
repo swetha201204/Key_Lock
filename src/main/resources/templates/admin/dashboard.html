@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Dashboard — KeyLock </title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="logo"><div class="logo-icon">🔐</div>KEYLOCK </div>
+    <div class="nav-links">
+        <span style="font-size:0.82rem;color:var(--muted)">
+            Admin: <span style="color:var(--text)" th:text="${admin.name}"></span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="nav-btn">Logout</button>
+        </form>
+    </div>
+</nav>
+
+<div class="dash-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="sidebar-label">Main</div>
+        <a href="/admin/dashboard" class="sidebar-item" th:classappend="${activeTab == 'files'} ? 'active' : ''">
+            <span class="si">📁</span> Files
+        </a>
+        <a href="/admin/users" class="sidebar-item" th:classappend="${activeTab == 'users'} ? 'active' : ''">
+            <span class="si">👥</span> Users
+        </a>
+        <div class="sidebar-label">System</div>
+        <form th:action="@{/logout}" method="post" style="margin:0">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="sidebar-item" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--muted)">
+                <span class="si">🚪</span> Logout
+            </button>
+        </form>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dash-main">
+
+        <!-- Flash Messages -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <!-- ===== FILES TAB ===== -->
+        <div th:if="${activeTab == 'files'}">
+            <div class="dash-header">
+                <div>
+                    <div class="dash-title">File Management</div>
+                    <div class="dash-sub">Upload AES-256 encrypted files for employees</div>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="stat-row">
+                <div class="stat-card">
+                    <div class="stat-label">Total Files</div>
+                    <div class="stat-value blue" th:text="${fileCount}">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Employees</div>
+                    <div class="stat-value green" th:text="${activeCount}">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Revoked</div>
+                    <div class="stat-value red" th:text="${revokedCount}">0</div>
+                </div>
+            </div>
+
+            <!-- Upload Panel -->
+            <div class="panel">
+                <div class="panel-head">Upload New File</div>
+                <div class="panel-body">
+                    <form th:action="@{/admin/upload}" method="post" enctype="multipart/form-data">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                        <div class="upload-zone" onclick="document.getElementById('fileInput').click()"
+                             ondragover="event.preventDefault();this.classList.add('drag')"
+                             ondragleave="this.classList.remove('drag')"
+                             ondrop="handleDrop(event)">
+                            <div class="upload-icon">📂</div>
+                            <p><strong>Click to browse</strong> or drag &amp; drop files here</p>
+                            <p style="margin-top:6px;font-size:0.76rem">Files encrypted with AES-256 before storage</p>
+                        </div>
+                        <input type="file" id="fileInput" name="file" style="display:none"
+                               onchange="this.form.submit()"/>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Files Table -->
+            <div class="panel">
+                <div class="panel-head">
+                    <span>Uploaded Files</span>
+                    <span class="tag tag-admin" th:text="${fileCount} + ' files'">0 files</span>
+                </div>
+                <div class="panel-body" style="padding:0">
+
+                    <!-- Empty State -->
+                    <div th:if="${#lists.isEmpty(files)}" class="empty">
+                        <div class="empty-icon">📭</div>
+                        No files uploaded yet. Upload a file above.
+                    </div>
+
+                    <!-- Files Table -->
+                    <table class="file-table" th:if="${!#lists.isEmpty(files)}">
+                        <thead>
+                            <tr>
+                                <th>File</th>
+                                <th>Size</th>
+                                <th>Uploaded</th>
+                                <th>SHA-256 (integrity)</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="file : ${files}">
+                                <td>
+                                    <span class="file-name" th:text="${file.originalName}">file.pdf</span>
+                                </td>
+                                <td>
+                                    <span class="file-size" th:text="${file.formattedSize}">1.2 MB</span>
+                                </td>
+                                <td>
+                                    <span class="file-date"
+                                          th:text="${#temporals.format(file.uploadedAt, 'dd MMM yyyy, HH:mm')}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="file-size" style="font-size:0.68rem"
+                                          th:text="${#strings.substring(file.sha256Hash, 0, 16) + '...'}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <form th:action="@{/admin/delete-file/{id}(id=${file.id})}" method="post" style="display:inline">
+                                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                        <button type="submit" class="action-btn rev"
+                                                onclick="return confirm('Delete this file?')">🗑 Remove</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== USERS TAB ===== -->
+        <div th:if="${activeTab == 'users'}">
+            <div class="dash-header">
+                <div>
+                    <div class="dash-title">User Management</div>
+                    <div class="dash-sub">Manage employee access and revocation</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head">
+                    <span>Registered Employees</span>
+                    <span class="tag tag-emp" th:text="${#lists.size(employees)} + ' employees'">0 employees</span>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Empty State -->
+                    <div th:if="${#lists.isEmpty(employees)}" class="empty">
+                        <div class="empty-icon">👤</div>
+                        No employees registered yet.
+                    </div>
+
+                    <!-- Employee List -->
+                    <div th:each="emp : ${employees}" class="user-row">
+                        <div class="avatar" th:text="${#strings.substring(emp.name, 0, 1).toUpperCase()}">A</div>
+                        <div class="user-info">
+                            <div class="user-name" th:text="${emp.name}">Employee Name</div>
+                            <div class="user-email" th:text="${emp.email}">email@example.com</div>
+                        </div>
+                        <span class="tag" th:classappend="${emp.revoked} ? 'tag-revoked' : 'tag-emp'"
+                              th:text="${emp.revoked} ? 'Revoked' : 'Active'">Active</span>
+
+                        <!-- Revoke Button -->
+                        <form th:if="${!emp.revoked}" th:action="@{/admin/revoke/{id}(id=${emp.id})}" method="post" style="margin:0">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="action-btn rev"
+                                    onclick="return confirm('Revoke access for this user?')">🚫 Revoke</button>
+                        </form>
+
+                        <!-- Restore Button -->
+                        <form th:if="${emp.revoked}" th:action="@{/admin/restore/{id}(id=${emp.id})}" method="post" style="margin:0">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <button type="submit" class="action-btn" style="color:var(--success);border-color:rgba(46,213,115,0.3)">
+                                ♻ Restore
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+function handleDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag');
+    // Trigger file input with dropped file
+    const dt = e.dataTransfer;
+    const fileInput = document.getElementById('fileInput');
+    fileInput.files = dt.files;
+    fileInput.form.submit();
+}
+</script>
+</body>
+</html>
