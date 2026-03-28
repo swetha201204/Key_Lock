@@ -23,28 +23,38 @@ Each user is assigned a unique RSA private key during registration, which is req
   File Management
 
        Upload and manage files (Admin)
+       
        Secure download access (Employee)
   Data Protection
   
        Passwords encrypted using BCrypt
+       
        Secure session handling
+       
        One-time key visibility
        
   User-Friendly UI
 
        Built with Thymeleaf
+       
        Clean and responsive design
        
 # Tech Stack
 
       Backend: Spring Boot, Spring Security
+      
       Frontend: Thymeleaf, HTML, CSS
+      
       Database: MySQL
+      
       Build Tool: Maven
 
 # Future Enhancements
 
-    File encryption using public/private key pair
-    Cloud storage integration (AWS S3)
-    Audit logs for file access
-    Multi-factor authentication (MFA)
+      File encryption using public/private key pair
+      
+      Cloud storage integration (AWS S3)
+      
+      Audit logs for file access
+      
+      Multi-factor authentication (MFA)
